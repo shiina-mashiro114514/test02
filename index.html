@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>世界时钟</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --accent: #2563eb;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1220;
+          --card: #111827;
+          --text: #e5e7eb;
+          --muted: #9ca3af;
+          --accent: #60a5fa;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background: radial-gradient(circle at top right, #93c5fd22, transparent 40%), var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .container {
+        width: min(920px, 100%);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.6rem, 2.8vw, 2.3rem);
+      }
+
+      .hint {
+        margin: 0 0 24px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+      }
+
+      .clock-card {
+        background: var(--card);
+        border: 1px solid #9ca3af33;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 8px 24px #00000014;
+      }
+
+      .city {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .tz {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      .time {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          "Courier New", monospace;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .date {
+        margin-top: 6px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h1>世界时钟</h1>
+      <p class="hint">自动同步显示北京、纽约、东京、巴黎当前本地时间。</p>
+      <section class="grid" id="clock-grid"></section>
+    </main>
+
+    <script>
+      const cities = [
+        { name: "北京", tz: "Asia/Shanghai" },
+        { name: "纽约", tz: "America/New_York" },
+        { name: "东京", tz: "Asia/Tokyo" },
+        { name: "巴黎", tz: "Europe/Paris" },
+      ];
+
+      const timeFormatter = (timeZone) =>
+        new Intl.DateTimeFormat("zh-CN", {
+          timeZone,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+
+      const dateFormatter = (timeZone) =>
+        new Intl.DateTimeFormat("zh-CN", {
+          timeZone,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          weekday: "short",
+        });
+
+      const grid = document.getElementById("clock-grid");
+      const clockNodes = cities.map((city) => {
+        const card = document.createElement("article");
+        card.className = "clock-card";
+        card.innerHTML = `
+          <div class="city">${city.name}</div>
+          <div class="tz">${city.tz}</div>
+          <div class="time" aria-label="${city.name}时间">--:--:--</div>
+          <div class="date" aria-label="${city.name}日期">----</div>
+        `;
+        grid.appendChild(card);
+        return {
+          timeEl: card.querySelector(".time"),
+          dateEl: card.querySelector(".date"),
+          tf: timeFormatter(city.tz),
+          df: dateFormatter(city.tz),
+        };
+      });
+
+      function tick() {
+        const now = new Date();
+        for (const clock of clockNodes) {
+          clock.timeEl.textContent = clock.tf.format(now);
+          clock.dateEl.textContent = clock.df.format(now);
+        }
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    </script>
+  </body>
+</html>
